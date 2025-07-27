@@ -5,10 +5,47 @@ import { usePredictions } from '../contexts/PredictionContext';
 const ModelTest = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const [results, setResults] = useState(null);
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef(null);
   const { addPrediction } = usePredictions();
+
+  // Disease specific information
+  const diseaseInfo = {
+    ALZHEIMER: {
+      precautions: [
+        "Protect your head from injury.",
+        "Avoid smoking and limit alcohol.",
+        "Go for regular health check-ups.",
+        "Sleep 7–8 hours every night.",
+        "Reduce and manage stress daily."
+      ],
+      recommendations: [
+        "Exercise daily (walk, jog, stretch).",
+        "Eat brain-friendly foods (greens, fish, nuts).",
+        "Stay mentally active (read, play games).",
+        "Keep social connections strong.",
+        "Manage health (control BP, sugar, avoid smoking)."
+      ]
+    },
+    PARKINSON: {
+      precautions: [
+        "Prevent falls with safe home setups.",
+        "Avoid long periods of inactivity.",
+        "Don't skip or adjust medication without advice.",
+        "Watch for mood or sleep changes.",
+        "Manage other health issues early."
+      ],
+      recommendations: [
+        "Exercise regularly to stay mobile.",
+        "Eat a balanced diet (fiber, fruits, vegetables).",
+        "Practice activities that improve balance.",
+        "Stay socially and mentally active.",
+        "Take medications as prescribed."
+      ]
+    }
+  };
 
   const handleFileSelect = (file) => {
     if (file && file.type.startsWith('image/')) {
@@ -51,14 +88,23 @@ const ModelTest = () => {
     setIsAnalyzing(true);
     
     try {
+      console.log('Sending file for analysis:', selectedFile.name);
       const response = await apiService.predict(selectedFile);
+      console.log('Analysis response:', response);
       
       if (response.success) {
         const prediction = response.prediction;
         
+        // Map backend prediction codes to frontend codes
+        const predictionMap = {
+          'CONTROL': 'CONTROL',
+          'AD': 'ALZHEIMER',
+          'PD': 'PARKINSON'
+        };
+        
         // Use the backend response directly as it already matches the expected format
         const transformedResults = {
-          prediction: prediction.name,
+          prediction: predictionMap[prediction.name] || prediction.name,
           full_name: prediction.full_name,
           description: prediction.description,
           recommendation: prediction.recommendation,
@@ -69,9 +115,11 @@ const ModelTest = () => {
           },
           primary_confidence: prediction.primary_confidence,
           metadata: response.metadata,
-          disclaimer: response.disclaimer
+          disclaimer: response.disclaimer,
+          image_url: response.image_url // Store Cloudinary URL
         };
         
+        console.log('Transformed results:', transformedResults);
         setResults(transformedResults);
         
         // Save prediction to context for metrics
@@ -80,12 +128,16 @@ const ModelTest = () => {
         throw new Error(response.message || 'Analysis failed');
       }
     } catch (error) {
-      console.error('Analysis error:', error);
+      console.error('Analysis error details:', error);
       
       // Handle different types of errors
       let errorMessage = 'Analysis failed. Please try again.';
       
-      if (error.message) {
+      if (error.response) {
+        // Server responded with an error
+        console.error('Server error response:', error.response);
+        errorMessage = error.response.message || error.response.error || errorMessage;
+      } else if (error.message) {
         if (error.message.includes('Failed to fetch')) {
           errorMessage = 'Unable to connect to the server. Please check if the backend is running.';
         } else if (error.message.includes('401') || error.message.includes('Unauthorized')) {
@@ -93,8 +145,6 @@ const ModelTest = () => {
         } else {
           errorMessage = error.message;
         }
-      } else if (typeof error === 'string') {
-        errorMessage = error;
       }
       
       alert(`Analysis failed: ${errorMessage}`);
@@ -110,16 +160,50 @@ const ModelTest = () => {
     }
 
     try {
-      const filename = selectedFile ? selectedFile.name : 'analysis_report.pdf';
+      setIsGeneratingReport(true);
+      const filename = selectedFile ? selectedFile.name.replace(/\.[^/.]+$/, '') + '_report.pdf' : 'medical_report.pdf';
+      
+      console.log('Generating report...');
       const response = await apiService.generateReport(results, filename);
       
-      if (response.success) {
-        // Success message could be shown here if needed
-        console.log('Report downloaded successfully');
+      if (response.success && response.blob) {
+        try {
+          console.log('Creating download link for PDF...');
+          
+          // Create blob URL
+          const blobUrl = window.URL.createObjectURL(
+            new Blob([response.blob], { type: response.contentType || 'application/pdf' })
+          );
+          
+          // Create download link
+          const downloadLink = document.createElement('a');
+          downloadLink.style.display = 'none';
+          downloadLink.href = blobUrl;
+          downloadLink.download = response.filename;
+          
+          // Add to document and trigger download
+          document.body.appendChild(downloadLink);
+          downloadLink.click();
+          
+          // Cleanup after a short delay
+          setTimeout(() => {
+            document.body.removeChild(downloadLink);
+            window.URL.revokeObjectURL(blobUrl);
+          }, 200);
+          
+          console.log('Report download initiated successfully');
+        } catch (downloadError) {
+          console.error('Download error:', downloadError);
+          alert('Failed to download the report. Please try again.');
+        }
+      } else {
+        throw new Error('Failed to generate report');
       }
     } catch (error) {
-      console.error('Report download failed:', error);
+      console.error('Report generation failed:', error);
       alert(`Failed to download report: ${error.message || 'Unknown error occurred'}`);
+    } finally {
+      setIsGeneratingReport(false);
     }
   };
 
@@ -320,6 +404,43 @@ const ModelTest = () => {
             </div>
           </div>
 
+          {/* Disease Specific Information */}
+          {results.prediction !== 'CONTROL' && diseaseInfo[results.prediction] && (
+            <div className="bg-white rounded-xl p-6 mb-6 border border-gray-200">
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Important Health Guidelines</h3>
+              
+              {/* Precautions */}
+              <div className="mb-6">
+                <h4 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+                  <svg className="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                  Precautions
+                </h4>
+                <ul className="list-disc list-inside space-y-2 text-gray-700">
+                  {diseaseInfo[results.prediction].precautions.map((precaution, index) => (
+                    <li key={index} className="ml-4">{precaution}</li>
+                  ))}
+                </ul>
+              </div>
+              
+              {/* Additional Recommendations */}
+              <div>
+                <h4 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
+                  <svg className="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Lifestyle Recommendations
+                </h4>
+                <ul className="list-disc list-inside space-y-2 text-gray-700">
+                  {diseaseInfo[results.prediction].recommendations.map((recommendation, index) => (
+                    <li key={index} className="ml-4">{recommendation}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
+
           {/* Detailed Confidence Scores */}
           <div className="bg-gray-50 rounded-xl p-6 mb-6">
             <h4 className="text-lg font-semibold text-gray-900 mb-4">Detailed Confidence Scores</h4>
@@ -416,9 +537,17 @@ const ModelTest = () => {
             </button>
             <button 
               onClick={handleDownloadReport}
-              className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-6 rounded-lg font-semibold hover:shadow-lg transform hover:scale-[1.02] transition-all duration-200"
+              disabled={isGeneratingReport}
+              className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-6 rounded-lg font-semibold hover:shadow-lg transform hover:scale-[1.02] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
-              Download Report
+              {isGeneratingReport ? (
+                <div className="flex items-center justify-center space-x-2">
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>Generating Report...</span>
+                </div>
+              ) : (
+                'Download Report'
+              )}
             </button>
           </div>
         </div>

@@ -188,18 +188,24 @@ class ApiService {
   // AI Prediction methods
   async predict(imageFile) {
     try {
+      console.log('Creating form data for prediction');
       const formData = new FormData();
       formData.append('image', imageFile);
 
+      console.log('Sending prediction request');
       const response = await this.request('/predictions/predict', {
         method: 'POST',
         headers: this.getMultipartHeaders(),
         body: formData,
       });
 
+      console.log('Prediction response received:', response);
       return response;
     } catch (error) {
-      console.error('Prediction failed:', error);
+      console.error('Prediction request failed:', error);
+      if (error.response) {
+        throw error.response;
+      }
       throw error;
     }
   }
@@ -221,15 +227,6 @@ class ApiService {
   async generateReport(reportData, filename) {
     try {
       console.log('Generating report with endpoint: /predictions/generate-report');
-      console.log('Base URL:', this.baseURL);
-      
-      // Test the endpoint first
-      try {
-        await this.testPredictionsEndpoint();
-        console.log('Predictions endpoint is accessible');
-      } catch (testError) {
-        console.error('Predictions endpoint test failed:', testError);
-      }
       
       const response = await this.request('/predictions/generate-report', {
         method: 'POST',
@@ -241,17 +238,42 @@ class ApiService {
       });
 
       if (response.success && response.download_url) {
-        // Trigger download
-        const downloadLink = document.createElement('a');
-        downloadLink.href = `${this.baseURL.replace('/api', '')}${response.download_url}`;
-        downloadLink.download = response.filename || `medical_report_${new Date().toISOString().split('T')[0]}.pdf`;
-        downloadLink.click();
+        console.log('Downloading PDF from:', response.download_url);
+        
+        // Fetch the PDF file
+        const pdfResponse = await fetch(response.download_url, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/pdf',
+          },
+        });
+        
+        if (!pdfResponse.ok) {
+          console.error('PDF download failed:', pdfResponse.status, pdfResponse.statusText);
+          throw new Error(`Failed to download PDF: ${pdfResponse.statusText}`);
+        }
+        
+        // Get the blob from the response
+        const pdfBlob = await pdfResponse.blob();
+        
+        // Verify the blob content
+        if (pdfBlob.size === 0) {
+          throw new Error('Downloaded PDF is empty');
+        }
+        
+        console.log('PDF downloaded successfully, size:', pdfBlob.size);
+        
+        return {
+          success: true,
+          blob: pdfBlob,
+          filename: response.filename,
+          contentType: response.content_type
+        };
+      } else {
+        throw new Error(response.message || 'Failed to get download URL from server');
       }
-
-      return response;
     } catch (error) {
       console.error('Report generation failed:', error);
-      console.error('Full error details:', error);
       throw error;
     }
   }

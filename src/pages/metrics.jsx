@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { usePredictions } from "../contexts/PredictionContext";
+import { useAuth } from "../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import ConfusionMatrix from "../assets/ConfusionMatrix.png";
 
@@ -18,6 +19,7 @@ const Metrics = () => {
     getDiseaseMetrics,
     getFormattedTimestamp,
   } = usePredictions();
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   // Animate numbers on component mount and when metrics change
@@ -167,9 +169,19 @@ const Metrics = () => {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Analytics & Metrics
           </h1>
-          <p className="text-gray-600">
-            Monitor system performance and analysis results
-          </p>
+          <div className="flex items-center space-x-2">
+            <p className="text-gray-600">
+              Monitor system performance and analysis results
+            </p>
+            {user && (
+              <div className="flex items-center space-x-2 ml-4">
+                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                <span className="text-sm text-blue-600 font-medium">
+                  {user.name || user.email}'s Data
+                </span>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Time Period Selector */}
@@ -432,15 +444,15 @@ const Metrics = () => {
             {/* Precision, Recall, F1-Score */}
             <div className="grid grid-cols-3 gap-4">
               <div className="text-center p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <p className="text-2xl font-bold text-blue-600">94.2%</p>
+                <p className="text-2xl font-bold text-blue-600">97%</p>
                 <p className="text-xs text-gray-600">Precision</p>
               </div>
               <div className="text-center p-4 bg-purple-50 rounded-lg border border-purple-200">
-                <p className="text-2xl font-bold text-purple-600">93.7%</p>
+                <p className="text-2xl font-bold text-purple-600">96%</p>
                 <p className="text-xs text-gray-600">Recall</p>
               </div>
               <div className="text-center p-4 bg-orange-50 rounded-lg border border-orange-200">
-                <p className="text-2xl font-bold text-orange-600">93.9%</p>
+                <p className="text-2xl font-bold text-orange-600">96.4%</p>
                 <p className="text-xs text-gray-600">F1-Score</p>
               </div>
             </div>

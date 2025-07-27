@@ -1,7 +1,13 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const Info = () => {
   const [activeTab, setActiveTab] = useState("alzheimer");
+  const navigate = useNavigate();
+
+  const handleStartAnalysis = () => {
+    navigate('/dashboard/model-test');
+  };
 
   const alzheimerInfo = {
     title: "Alzheimer's Disease",
@@ -18,6 +24,28 @@ const Info = () => {
       "Decreased or poor judgment",
       "Withdrawal from work or social activities",
       "Changes in mood and personality",
+    ],
+    predictionMethods: [
+      {
+        method: "Brain imaging (MRI, PET scans)",
+        description: "Detects early brain shrinkage or amyloid plaques."
+      },
+      {
+        method: "Biomarker tests (CSF or blood)",
+        description: "Measures proteins like amyloid-β and tau."
+      },
+      {
+        method: "Genetic testing",
+        description: "Identifies risk genes like APOE ε4."
+      },
+      {
+        method: "Cognitive assessments",
+        description: "Early signs detected through memory/thinking tests."
+      },
+      {
+        method: "AI and machine learning tools",
+        description: "Predict risk using health data, speech, and behavior."
+      }
     ],
     stages: [
       {
@@ -72,6 +100,28 @@ const Info = () => {
       "Sleep problems",
       "Depression and anxiety",
       "Cognitive changes",
+    ],
+    predictionMethods: [
+      {
+        method: "Neurological examination",
+        description: "Detects early motor symptoms like tremors or stiffness."
+      },
+      {
+        method: "Dopamine imaging (DaTscan)",
+        description: "Shows dopamine loss in brain structures."
+      },
+      {
+        method: "Genetic testing",
+        description: "Identifies mutations in genes like LRRK2 or PARK7."
+      },
+      {
+        method: "Olfactory tests (smell tests)",
+        description: "Loss of smell can appear years before motor symptoms."
+      },
+      {
+        method: "Digital monitoring (AI, wearables)",
+        description: "Tracks subtle movement changes and predicts progression."
+      }
     ],
     stages: [
       {
@@ -209,6 +259,53 @@ const Info = () => {
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8">
+          {/* Prediction Methods - New Section */}
+          <div className="bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition-shadow duration-300">
+            <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+              <div
+                className={`w-8 h-8 rounded-lg mr-3 flex items-center justify-center ${
+                  activeTab === "alzheimer" ? "bg-blue-100" : "bg-purple-100"
+                }`}
+              >
+                <svg
+                  className={`w-5 h-5 ${
+                    activeTab === "alzheimer" ? "text-blue-600" : "text-purple-600"
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                  />
+                </svg>
+              </div>
+              Top 5 Prediction Methods
+            </h3>
+            <div className="space-y-4">
+              {currentInfo.predictionMethods.map((method, index) => (
+                <div
+                  key={index}
+                  className={`border-l-4 pl-4 py-3 ${
+                    activeTab === "alzheimer"
+                      ? "border-blue-500"
+                      : "border-purple-500"
+                  }`}
+                >
+                  <h4 className="font-semibold text-gray-900 mb-1">
+                    {method.method}
+                  </h4>
+                  <p className="text-gray-600 text-sm">
+                    {method.description}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+
           {/* Symptoms */}
           <div className="bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition-shadow duration-300">
             <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
@@ -381,7 +478,10 @@ const Info = () => {
               neurological diseases. Upload your MRI scans for comprehensive
               analysis and get results within minutes.
             </p>
-            <button className="bg-white text-blue-600 px-8 py-3 rounded-full font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-200">
+            <button
+              onClick={handleStartAnalysis}
+              className="bg-white text-blue-600 px-8 py-3 rounded-full font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+            >
               Start Analysis
             </button>
           </div>
