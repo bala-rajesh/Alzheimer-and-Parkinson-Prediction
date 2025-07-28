@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import ChatbotWidget from "../components/ChatbotWidget";
 
 const Info = () => {
   const [activeTab, setActiveTab] = useState("alzheimer");
@@ -176,7 +177,9 @@ const Info = () => {
   const currentInfo = activeTab === "alzheimer" ? alzheimerInfo : parkinsonInfo;
 
   return (
-    <div className="max-w-7xl mx-auto">
+    <>
+      <ChatbotWidget />
+      <div className="max-w-7xl mx-auto">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-4">
@@ -488,6 +491,7 @@ const Info = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

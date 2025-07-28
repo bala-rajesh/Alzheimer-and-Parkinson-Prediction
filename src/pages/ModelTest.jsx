@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import apiService from '../services/api';
 import { usePredictions } from '../contexts/PredictionContext';
+import ChatbotWidget from '../components/ChatbotWidget';
 
 const ModelTest = () => {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -231,7 +232,9 @@ const ModelTest = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <>
+      <ChatbotWidget />
+      <div className="max-w-4xl mx-auto">
       {/* Notification Toast */}
       {notification && (
         <div className={`fixed top-4 right-4 z-50 max-w-md p-4 rounded-lg shadow-lg transform transition-all duration-300 ${
@@ -613,6 +616,7 @@ const ModelTest = () => {
         </div>
       )}
     </div>
+    </>
   );
 };
 
