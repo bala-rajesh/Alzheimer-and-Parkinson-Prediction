@@ -8,8 +8,15 @@ const ModelTest = () => {
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const [results, setResults] = useState(null);
   const [dragActive, setDragActive] = useState(false);
+  const [notification, setNotification] = useState(null);
   const fileInputRef = useRef(null);
   const { addPrediction } = usePredictions();
+
+  // Show notification function
+  const showNotification = (message, type = 'info', duration = 5000) => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification(null), duration);
+  };
 
   // Disease specific information
   const diseaseInfo = {
@@ -52,7 +59,7 @@ const ModelTest = () => {
       setSelectedFile(file);
       setResults(null);
     } else {
-      alert('Please select a valid image file (JPEG, PNG, etc.)');
+      showNotification('Please select a valid image file (JPEG, PNG, etc.)', 'warning');
     }
   };
 
@@ -147,7 +154,7 @@ const ModelTest = () => {
         }
       }
       
-      alert(`Analysis failed: ${errorMessage}`);
+      showNotification(`Analysis failed: ${errorMessage}`, 'error');
     } finally {
       setIsAnalyzing(false);
     }
@@ -155,7 +162,7 @@ const ModelTest = () => {
 
   const handleDownloadReport = async () => {
     if (!results) {
-      alert('No analysis results available to download.');
+      showNotification('No analysis results available to download.', 'warning');
       return;
     }
 
@@ -195,20 +202,20 @@ const ModelTest = () => {
           
           // Show success message with Cloudinary info
           if (response.cloudinaryUrl) {
-            alert(`✅ Report downloaded successfully!\n\n📁 Local download: Complete\n☁️ Cloud backup: Saved to Cloudinary\n🔗 Cloud URL: ${response.cloudinaryUrl}`);
+            showNotification(`✅ Report downloaded successfully!\n\n📁 Local download: Complete\n☁️ Cloud backup: Saved to Cloudinary\n🔗 Cloud URL: ${response.cloudinaryUrl}`, 'success', 8000);
           } else {
-            alert('✅ Report downloaded successfully!\n\n📁 Local download: Complete\n⚠️ Cloud backup: Failed (but local download succeeded)');
+            showNotification('✅ Report downloaded successfully!\n\n📁 Local download: Complete\n⚠️ Cloud backup: Failed (but local download succeeded)', 'success', 6000);
           }
         } catch (downloadError) {
           console.error('Download error:', downloadError);
-          alert('Failed to download the report. Please try again.');
+          showNotification('Failed to download the report. Please try again.', 'error');
         }
       } else {
         throw new Error('Failed to generate report');
       }
     } catch (error) {
       console.error('Report generation failed:', error);
-      alert(`Failed to download report: ${error.message || 'Unknown error occurred'}`);
+      showNotification(`Failed to download report: ${error.message || 'Unknown error occurred'}`, 'error');
     } finally {
       setIsGeneratingReport(false);
     }
@@ -225,6 +232,52 @@ const ModelTest = () => {
 
   return (
     <div className="max-w-4xl mx-auto">
+      {/* Notification Toast */}
+      {notification && (
+        <div className={`fixed top-4 right-4 z-50 max-w-md p-4 rounded-lg shadow-lg transform transition-all duration-300 ${
+          notification.type === 'success' ? 'bg-green-500 text-white' :
+          notification.type === 'error' ? 'bg-red-500 text-white' :
+          notification.type === 'warning' ? 'bg-yellow-500 text-white' :
+          'bg-blue-500 text-white'
+        }`}>
+          <div className="flex items-start space-x-3">
+            <div className="flex-shrink-0">
+              {notification.type === 'success' && (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              )}
+              {notification.type === 'error' && (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              )}
+              {notification.type === 'warning' && (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              )}
+              {notification.type === 'info' && (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              )}
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium whitespace-pre-line">{notification.message}</p>
+            </div>
+            <button
+              onClick={() => setNotification(null)}
+              className="flex-shrink-0 ml-4 text-white hover:text-gray-200"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900 mb-4">AI Model Testing</h1>
