@@ -1,3 +1,5 @@
+import jsPDF from 'jspdf';
+
 // API Service for Medical AI Application
 class ApiService {
   constructor() {
@@ -223,58 +225,371 @@ class ApiService {
     }
   }
 
-  // Report generation
+  // Report generation - Generate PDF locally and upload to Cloudinary
   async generateReport(reportData, filename) {
     try {
-      console.log('Generating report with endpoint: /predictions/generate-report');
+      console.log('Generating PDF report locally using jsPDF');
       
-      const response = await this.request('/predictions/generate-report', {
+      // Create new PDF document
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.width;
+      const pageHeight = doc.internal.pageSize.height;
+      const margin = 20;
+      const maxWidth = pageWidth - (margin * 2);
+      let yPosition = margin;
+      
+      // Helper function to add text with word wrapping
+      const addText = (text, fontSize = 12, isBold = false, color = [0, 0, 0]) => {
+        doc.setFontSize(fontSize);
+        doc.setTextColor(color[0], color[1], color[2]);
+        if (isBold) {
+          doc.setFont(undefined, 'bold');
+        } else {
+          doc.setFont(undefined, 'normal');
+        }
+        
+        const lines = doc.splitTextToSize(text, maxWidth);
+        lines.forEach(line => {
+          if (yPosition > pageHeight - margin) {
+            doc.addPage();
+            yPosition = margin;
+          }
+          doc.text(line, margin, yPosition);
+          yPosition += fontSize * 0.6;
+        });
+        yPosition += 5; // Add some spacing after text
+      };
+      
+      // Helper function to add a line
+      const addLine = () => {
+        yPosition += 5;
+        doc.setDrawColor(200, 200, 200);
+        doc.line(margin, yPosition, pageWidth - margin, yPosition);
+        yPosition += 10;
+      };
+      
+      // Helper function to add confidence bar
+      const addConfidenceBar = (label, percentage, color) => {
+        const barWidth = maxWidth * 0.6;
+        const barHeight = 8;
+        const fillWidth = (barWidth * percentage) / 100;
+        
+        // Label
+        doc.setFontSize(10);
+        doc.setFont(undefined, 'normal');
+        doc.setTextColor(0, 0, 0);
+        doc.text(`${label}: ${percentage.toFixed(1)}%`, margin, yPosition);
+        yPosition += 12;
+        
+        // Background bar
+        doc.setFillColor(240, 240, 240);
+        doc.rect(margin, yPosition, barWidth, barHeight, 'F');
+        
+        // Fill bar
+        doc.setFillColor(color[0], color[1], color[2]);
+        doc.rect(margin, yPosition, fillWidth, barHeight, 'F');
+        
+        yPosition += barHeight + 10;
+      };
+      
+      const timestamp = new Date().toLocaleString();
+      
+      // Header
+      addText('MEDICAL AI ANALYSIS REPORT', 20, true, [0, 100, 200]);
+      addText(`Generated: ${timestamp}`, 10, false, [100, 100, 100]);
+      addText(`File: ${reportData.metadata?.filename || 'Unknown'}`, 10, false, [100, 100, 100]);
+      addLine();
+      
+      // Analysis Results Section
+      addText('ANALYSIS RESULTS', 16, true, [0, 0, 0]);
+      addText(`Primary Diagnosis: ${reportData.full_name}`, 12, true);
+      addText(`Confidence: ${reportData.primary_confidence?.toFixed(1)}%`, 12, true, [0, 150, 0]);
+      addText(`Description: ${reportData.description}`, 11);
+      yPosition += 10;
+      
+      // Recommendation Section
+      addText('RECOMMENDATION', 14, true, [0, 100, 200]);
+      addText(reportData.recommendation, 11);
+      yPosition += 10;
+      
+      // Detailed Confidence Scores Section
+      addText('DETAILED CONFIDENCE SCORES', 14, true, [0, 100, 200]);
+      yPosition += 5;
+      
+      // Confidence bars
+      addConfidenceBar('Normal/Control', reportData.confidence?.control || 0, [76, 175, 80]);
+      addConfidenceBar('Alzheimer\'s Disease', reportData.confidence?.alzheimer || 0, [244, 67, 54]);
+      addConfidenceBar('Parkinson\'s Disease', reportData.confidence?.parkinson || 0, [255, 152, 0]);
+      
+      yPosition += 10;
+      
+      // Analysis Metadata Section
+      addText('ANALYSIS METADATA', 14, true, [0, 100, 200]);
+      addText(`Model Version: ${reportData.metadata?.model_version || 'Unknown'}`, 10);
+      addText(`User ID: ${reportData.metadata?.user_id || 'Unknown'}`, 10);
+      addText(`Analysis Timestamp: ${reportData.metadata?.timestamp || timestamp}`, 10);
+      yPosition += 15;
+      
+      // Disclaimer Section
+      addText('IMPORTANT DISCLAIMER', 14, true, [200, 100, 0]);
+      const disclaimer = reportData.disclaimer || 'This analysis is for research purposes only and should not be used for medical diagnosis. Please consult with a qualified healthcare professional for proper medical evaluation.';
+      
+      // Add disclaimer in a box
+      const disclaimerLines = doc.splitTextToSize(disclaimer, maxWidth - 20);
+      const disclaimerHeight = disclaimerLines.length * 6 + 20;
+      
+      // Check if we need a new page for disclaimer
+      if (yPosition + disclaimerHeight > pageHeight - margin) {
+        doc.addPage();
+        yPosition = margin;
+      }
+      
+      // Draw disclaimer box
+      doc.setFillColor(255, 243, 205);
+      doc.setDrawColor(255, 234, 167);
+      doc.rect(margin, yPosition, maxWidth, disclaimerHeight, 'FD');
+      
+      yPosition += 15;
+      doc.setFontSize(10);
+      doc.setTextColor(0, 0, 0);
+      disclaimerLines.forEach(line => {
+        doc.text(line, margin + 10, yPosition);
+        yPosition += 6;
+      });
+      
+      // Footer
+      yPosition = pageHeight - 30;
+      doc.setFontSize(8);
+      doc.setTextColor(100, 100, 100);
+      doc.text('Report generated by Medical AI Analysis System', margin, yPosition);
+      
+      // Generate PDF blob
+      const pdfBlob = doc.output('blob');
+      
+      console.log('PDF report generated successfully, size:', pdfBlob.size);
+      
+      // Now upload the PDF to Cloudinary via backend
+      console.log('Uploading PDF to Cloudinary...');
+      const cloudinaryResponse = await this.uploadPDFToCloudinary(pdfBlob, filename);
+      
+      return {
+        success: true,
+        blob: pdfBlob, // Still provide blob for local download
+        filename: filename.endsWith('.pdf') ? filename : filename + '.pdf',
+        contentType: 'application/pdf',
+        cloudinaryUrl: cloudinaryResponse.cloudinaryUrl, // Cloudinary URL
+        cloudinaryPublicId: cloudinaryResponse.publicId
+      };
+    } catch (error) {
+      console.error('Local PDF generation failed:', error);
+      
+      // Fallback: Try backend generation
+      try {
+        console.log('Trying backend report generation as fallback');
+        return await this.generateReportFromBackend(reportData, filename);
+      } catch (backendError) {
+        console.error('Backend report generation also failed:', backendError);
+        throw new Error('Both local and backend report generation failed');
+      }
+    }
+  }
+
+  // Upload PDF to Cloudinary via backend
+  async uploadPDFToCloudinary(pdfBlob, filename) {
+    try {
+      console.log('Uploading PDF to Cloudinary via backend...');
+      
+      const formData = new FormData();
+      formData.append('pdf', pdfBlob, filename);
+      
+      const response = await fetch(`${this.baseURL}/predictions/upload-pdf-report`, {
         method: 'POST',
-        headers: this.getAuthHeaders(),
-        body: JSON.stringify({
-          results: reportData,
-          filename: filename,
-        }),
+        headers: this.getMultipartHeaders(),
+        body: formData,
       });
 
-      if (response.success && response.download_url) {
-        console.log('Downloading PDF from:', response.download_url);
-        
-        // Fetch the PDF file
-        const pdfResponse = await fetch(response.download_url, {
-          method: 'GET',
-          headers: {
-            'Accept': 'application/pdf',
-          },
-        });
-        
-        if (!pdfResponse.ok) {
-          console.error('PDF download failed:', pdfResponse.status, pdfResponse.statusText);
-          throw new Error(`Failed to download PDF: ${pdfResponse.statusText}`);
-        }
-        
-        // Get the blob from the response
-        const pdfBlob = await pdfResponse.blob();
-        
-        // Verify the blob content
-        if (pdfBlob.size === 0) {
-          throw new Error('Downloaded PDF is empty');
-        }
-        
-        console.log('PDF downloaded successfully, size:', pdfBlob.size);
-        
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      if (result.success) {
+        console.log('PDF uploaded to Cloudinary successfully:', result.cloudinary_url);
         return {
-          success: true,
-          blob: pdfBlob,
-          filename: response.filename,
-          contentType: response.content_type
+          cloudinaryUrl: result.cloudinary_url,
+          publicId: result.public_id
         };
       } else {
-        throw new Error(response.message || 'Failed to get download URL from server');
+        throw new Error(result.message || 'Failed to upload PDF to Cloudinary');
       }
     } catch (error) {
-      console.error('Report generation failed:', error);
-      throw error;
+      console.error('Cloudinary upload failed:', error);
+      // Don't throw error here, just log it - local download should still work
+      return {
+        cloudinaryUrl: null,
+        publicId: null
+      };
+    }
+  }
+
+  // Generate text-based report
+  generateTextReport(reportData) {
+    const timestamp = new Date().toLocaleString();
+    
+    return `
+MEDICAL AI ANALYSIS REPORT
+==========================
+
+Generated: ${timestamp}
+Filename: ${reportData.metadata?.filename || 'Unknown'}
+
+ANALYSIS RESULTS
+================
+Primary Diagnosis: ${reportData.full_name}
+Confidence: ${reportData.primary_confidence?.toFixed(1)}%
+Description: ${reportData.description}
+
+DETAILED CONFIDENCE SCORES
+===========================
+Normal/Control: ${reportData.confidence?.control?.toFixed(1)}%
+Alzheimer's Disease: ${reportData.confidence?.alzheimer?.toFixed(1)}%
+Parkinson's Disease: ${reportData.confidence?.parkinson?.toFixed(1)}%
+
+RECOMMENDATION
+==============
+${reportData.recommendation}
+
+ANALYSIS METADATA
+=================
+Model Version: ${reportData.metadata?.model_version || 'Unknown'}
+User ID: ${reportData.metadata?.user_id || 'Unknown'}
+Timestamp: ${reportData.metadata?.timestamp || timestamp}
+
+IMPORTANT DISCLAIMER
+====================
+${reportData.disclaimer || 'This analysis is for research purposes only and should not be used for medical diagnosis. Please consult with a qualified healthcare professional for proper medical evaluation.'}
+
+---
+Report generated by Medical AI Analysis System
+    `.trim();
+  }
+
+  // Generate HTML content for PDF
+  generatePDFContent(reportData) {
+    const timestamp = new Date().toLocaleString();
+    
+    return `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Medical AI Analysis Report</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+        .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
+        .section { margin-bottom: 25px; }
+        .section h2 { color: #333; border-bottom: 1px solid #ccc; padding-bottom: 5px; }
+        .confidence-bar { background: #f0f0f0; height: 20px; border-radius: 10px; margin: 5px 0; }
+        .confidence-fill { height: 100%; border-radius: 10px; }
+        .normal { background: #4CAF50; }
+        .alzheimer { background: #f44336; }
+        .parkinson { background: #ff9800; }
+        .disclaimer { background: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Medical AI Analysis Report</h1>
+        <p>Generated: ${timestamp}</p>
+    </div>
+    
+    <div class="section">
+        <h2>Analysis Results</h2>
+        <p><strong>Primary Diagnosis:</strong> ${reportData.full_name}</p>
+        <p><strong>Confidence:</strong> ${reportData.primary_confidence?.toFixed(1)}%</p>
+        <p><strong>Description:</strong> ${reportData.description}</p>
+    </div>
+    
+    <div class="section">
+        <h2>Detailed Confidence Scores</h2>
+        <div>
+            <p>Normal/Control: ${reportData.confidence?.control?.toFixed(1)}%</p>
+            <div class="confidence-bar">
+                <div class="confidence-fill normal" style="width: ${reportData.confidence?.control}%"></div>
+            </div>
+        </div>
+        <div>
+            <p>Alzheimer's Disease: ${reportData.confidence?.alzheimer?.toFixed(1)}%</p>
+            <div class="confidence-bar">
+                <div class="confidence-fill alzheimer" style="width: ${reportData.confidence?.alzheimer}%"></div>
+            </div>
+        </div>
+        <div>
+            <p>Parkinson's Disease: ${reportData.confidence?.parkinson?.toFixed(1)}%</p>
+            <div class="confidence-bar">
+                <div class="confidence-fill parkinson" style="width: ${reportData.confidence?.parkinson}%"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2>Recommendation</h2>
+        <p>${reportData.recommendation}</p>
+    </div>
+    
+    <div class="section disclaimer">
+        <h2>Important Disclaimer</h2>
+        <p>${reportData.disclaimer || 'This analysis is for research purposes only and should not be used for medical diagnosis. Please consult with a qualified healthcare professional for proper medical evaluation.'}</p>
+    </div>
+</body>
+</html>
+    `.trim();
+  }
+
+  // Fallback: Try backend generation
+  async generateReportFromBackend(reportData, filename) {
+    const url = `${this.baseURL}/predictions/generate-report`;
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify({
+        results: reportData,
+        filename: filename,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+    }
+
+    // Check if the response is a PDF (binary data)
+    const contentType = response.headers.get('content-type');
+    
+    if (contentType && contentType.includes('application/pdf')) {
+      // Direct PDF response
+      console.log('Received direct PDF response from backend');
+      const pdfBlob = await response.blob();
+      
+      if (pdfBlob.size === 0) {
+        throw new Error('Downloaded PDF is empty');
+      }
+      
+      console.log('PDF downloaded successfully from backend, size:', pdfBlob.size);
+      
+      return {
+        success: true,
+        blob: pdfBlob,
+        filename: filename,
+        contentType: 'application/pdf'
+      };
+    } else {
+      // JSON response - backend doesn't support direct PDF
+      const jsonResponse = await response.json();
+      throw new Error(jsonResponse.message || 'Backend PDF generation not supported');
     }
   }
 

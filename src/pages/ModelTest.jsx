@@ -170,7 +170,7 @@ const ModelTest = () => {
         try {
           console.log('Creating download link for PDF...');
           
-          // Create blob URL
+          // Create blob URL for local download
           const blobUrl = window.URL.createObjectURL(
             new Blob([response.blob], { type: response.contentType || 'application/pdf' })
           );
@@ -192,6 +192,13 @@ const ModelTest = () => {
           }, 200);
           
           console.log('Report download initiated successfully');
+          
+          // Show success message with Cloudinary info
+          if (response.cloudinaryUrl) {
+            alert(`✅ Report downloaded successfully!\n\n📁 Local download: Complete\n☁️ Cloud backup: Saved to Cloudinary\n🔗 Cloud URL: ${response.cloudinaryUrl}`);
+          } else {
+            alert('✅ Report downloaded successfully!\n\n📁 Local download: Complete\n⚠️ Cloud backup: Failed (but local download succeeded)');
+          }
         } catch (downloadError) {
           console.error('Download error:', downloadError);
           alert('Failed to download the report. Please try again.');

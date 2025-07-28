@@ -388,8 +388,8 @@ const Metrics = () => {
               )}
             </div>
 
-            <button 
-              onClick={() => navigate('/all-analyses')}
+            <button
+              onClick={() => navigate("/all-analyses")}
               className="w-full mt-4 text-blue-600 hover:text-blue-700 text-sm font-medium py-2 transition-colors duration-200 hover:bg-blue-50 rounded-lg"
             >
               View All Analyses →
