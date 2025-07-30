@@ -13,11 +13,9 @@ import Login from "./pages/login";
 import Signup from "./pages/signup";
 import Dashboard from "./pages/dashboard";
 import Info from "./pages/info";
-import Metrics from "./pages/Metrics";
+import Metrics from "./pages/Metrics.jsx";
 import ModelTest from "./pages/ModelTest";
 import AllAnalyses from "./pages/AllAnalyses";
-
-
 
 function App() {
   return (
@@ -29,21 +27,27 @@ function App() {
               <Route path="/" element={<Landing />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
-              <Route path="/dashboard" element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              }>
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <Dashboard />
+                  </ProtectedRoute>
+                }
+              >
                 <Route index element={<ModelTest />} />
                 <Route path="model-test" element={<ModelTest />} />
                 <Route path="metrics" element={<Metrics />} />
                 <Route path="info" element={<Info />} />
               </Route>
-              <Route path="/all-analyses" element={
-                <ProtectedRoute>
-                  <AllAnalyses />
-                </ProtectedRoute>
-              } />
+              <Route
+                path="/all-analyses"
+                element={
+                  <ProtectedRoute>
+                    <AllAnalyses />
+                  </ProtectedRoute>
+                }
+              />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </div>
