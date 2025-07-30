@@ -3,7 +3,7 @@ import jsPDF from 'jspdf';
 // API Service for Medical AI Application
 class ApiService {
   constructor() {
-    this.baseURL = 'http://localhost:5000/api';
+    this.baseURL = `${import.meta.env.VITE_API_URL}/api`;
     this.token = localStorage.getItem('authToken');
     this.mockUsers = JSON.parse(localStorage.getItem('mockUsers') || '[]');
     this.mockPredictions = JSON.parse(localStorage.getItem('mockPredictions') || '[]');
