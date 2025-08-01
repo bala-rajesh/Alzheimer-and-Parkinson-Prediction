@@ -10,6 +10,7 @@ const ModelTest = () => {
   const [results, setResults] = useState(null);
   const [dragActive, setDragActive] = useState(false);
   const [notification, setNotification] = useState(null);
+  const [analysisProgress, setAnalysisProgress] = useState(0);
   const fileInputRef = useRef(null);
   const { addPrediction } = usePredictions();
 
@@ -94,6 +95,21 @@ const ModelTest = () => {
     if (!selectedFile) return;
     
     setIsAnalyzing(true);
+    setAnalysisProgress(0);
+    
+    // Simulate progress updates with full bar completion
+    const progressInterval = setInterval(() => {
+      setAnalysisProgress(prev => {
+        const increment = (100 - prev) * 0.2; // Faster progression
+        const newProgress = prev + increment;
+        
+        if (newProgress >= 99) {
+          clearInterval(progressInterval);
+          return 99;
+        }
+        return newProgress;
+      });
+    }, 300);
     
     try {
       console.log('Sending file for analysis:', selectedFile.name);
@@ -101,51 +117,51 @@ const ModelTest = () => {
       console.log('Analysis response:', response);
       
       if (response.success) {
-        const prediction = response.prediction;
-        
-        // Map backend prediction codes to frontend codes
-        const predictionMap = {
-          'CONTROL': 'CONTROL',
-          'AD': 'ALZHEIMER',
-          'PD': 'PARKINSON'
-        };
-        
-        // Use the backend response directly as it already matches the expected format
-        const transformedResults = {
-          prediction: predictionMap[prediction.name] || prediction.name,
-          full_name: prediction.full_name,
-          description: prediction.description,
-          recommendation: prediction.recommendation,
-          confidence: {
-            control: prediction.confidence.control,
-            alzheimer: prediction.confidence.alzheimer,
-            parkinson: prediction.confidence.parkinson
-          },
-          primary_confidence: prediction.primary_confidence,
-          metadata: {
-            ...response.metadata,
-            timestamp: new Date().toISOString() // Use current client time for accurate timestamp
-          },
-          disclaimer: response.disclaimer,
-          image_url: response.image_url // Store Cloudinary URL
-        };
-        
-        console.log('Transformed results:', transformedResults);
-        setResults(transformedResults);
-        
-        // Save prediction to context for metrics
-        addPrediction(transformedResults, selectedFile.name);
+        // Ensure progress reaches 100% at completion
+        setAnalysisProgress(100);
+        setTimeout(() => {
+          const prediction = response.prediction;
+          
+          // Map backend prediction codes to frontend codes
+          const predictionMap = {
+            'CONTROL': 'CONTROL',
+            'AD': 'ALZHEIMER',
+            'PD': 'PARKINSON'
+          };
+          
+          const transformedResults = {
+            prediction: predictionMap[prediction.name] || prediction.name,
+            full_name: prediction.full_name,
+            description: prediction.description,
+            recommendation: prediction.recommendation,
+            confidence: {
+              control: prediction.confidence.control,
+              alzheimer: prediction.confidence.alzheimer,
+              parkinson: prediction.confidence.parkinson
+            },
+            primary_confidence: prediction.primary_confidence,
+            metadata: {
+              ...response.metadata,
+              timestamp: new Date().toISOString()
+            },
+            disclaimer: response.disclaimer,
+            image_url: response.image_url
+          };
+          
+          console.log('Transformed results:', transformedResults);
+          setResults(transformedResults);
+          setIsAnalyzing(false);
+          setAnalysisProgress(0);
+          addPrediction(transformedResults, selectedFile.name);
+        }, 500); // Short delay to show 100% completion
       } else {
         throw new Error(response.message || 'Analysis failed');
       }
     } catch (error) {
       console.error('Analysis error details:', error);
-      
-      // Handle different types of errors
       let errorMessage = 'Analysis failed. Please try again.';
       
       if (error.response) {
-        // Server responded with an error
         console.error('Server error response:', error.response);
         errorMessage = error.response.message || error.response.error || errorMessage;
       } else if (error.message) {
@@ -160,7 +176,7 @@ const ModelTest = () => {
       
       showNotification(`Analysis failed: ${errorMessage}`, 'error');
     } finally {
-      setIsAnalyzing(false);
+      clearInterval(progressInterval);
     }
   };
 
@@ -233,6 +249,52 @@ const ModelTest = () => {
   return (
     <>
       <ChatbotWidget />
+      {/* Loading Popup */}
+      {isAnalyzing && (
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl">
+            <div className="flex items-center space-x-4 mb-4">
+              <div className="w-10 h-10 relative">
+                <div className="absolute inset-0 rounded-full border-4 border-t-blue-500 border-r-transparent border-b-purple-500 border-l-transparent animate-spin"></div>
+                <div className="absolute inset-0 rounded-full border-4 border-t-transparent border-r-blue-500 border-b-transparent border-l-purple-500 animate-spin [animation-delay:-0.2s]"></div>
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-gray-900">Preparing Brain Analysis</h2>
+                <p className="text-gray-600 text-sm">Starting up AI models for MRI analysis</p>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="bg-gray-100 rounded-full overflow-hidden">
+                <div 
+                  className="h-2 bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-500 ease-out"
+                  style={{ width: `${Math.min(analysisProgress, 100)}%` }}
+                ></div>
+              </div>
+              <p className="text-center text-sm text-gray-600">
+                {analysisProgress < 30 && "Preparing MRI analysis algorithms..."}
+                {analysisProgress >= 30 && analysisProgress < 60 && "Processing brain scan data..."}
+                {analysisProgress >= 60 && analysisProgress < 90 && "Running neural network analysis..."}
+                {analysisProgress >= 90 && "Finalizing results..."}
+              </p>
+              <div className="text-center text-sm text-gray-500">
+                {Math.min(Math.round(analysisProgress), 100)}% complete
+              </div>
+            </div>
+
+            <button
+              onClick={() => {
+                setIsAnalyzing(false);
+                setAnalysisProgress(0);
+              }}
+              className="mt-4 w-full py-2 text-gray-600 hover:text-gray-900 transition-colors duration-200"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+      
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
       {/* Notification Toast */}
       {notification && (
@@ -420,9 +482,14 @@ const ModelTest = () => {
               className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-2 sm:py-3 px-4 sm:px-6 rounded-lg font-semibold hover:shadow-lg transform hover:scale-[1.02] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-sm sm:text-base"
             >
               {isAnalyzing ? (
-                <div className="flex items-center justify-center space-x-2">
-                  <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  <span>Analyzing...</span>
+                <div className="flex items-center justify-center space-x-3">
+                  <div className="relative">
+                    <div className="h-8 w-8">
+                      <div className="absolute h-8 w-8 rounded-full border-4 border-t-blue-200 border-r-blue-200 border-b-blue-500 border-l-blue-500 animate-spin"></div>
+                      <div className="absolute h-8 w-8 rounded-full border-4 border-t-transparent border-r-transparent border-b-purple-500 border-l-purple-500 animate-spin [animation-delay:-0.2s]"></div>
+                    </div>
+                  </div>
+                  <span>Analyzing Brain MRI...</span>
                 </div>
               ) : (
                 'Start Analysis'
@@ -605,8 +672,12 @@ const ModelTest = () => {
               className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white py-2 sm:py-3 px-4 sm:px-6 rounded-lg font-semibold hover:shadow-lg transform hover:scale-[1.02] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-sm sm:text-base"
             >
               {isGeneratingReport ? (
-                <div className="flex items-center justify-center space-x-2">
-                  <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <div className="flex items-center justify-center space-x-3">
+                  <div className="flex space-x-1">
+                    <div className="h-2 w-2 bg-white rounded-full animate-[pulse_0.8s_ease-in-out_infinite] [animation-delay:-0.3s]"></div>
+                    <div className="h-2 w-2 bg-white rounded-full animate-[pulse_0.8s_ease-in-out_infinite] [animation-delay:-0.15s]"></div>
+                    <div className="h-2 w-2 bg-white rounded-full animate-[pulse_0.8s_ease-in-out_infinite]"></div>
+                  </div>
                   <span>Generating Report...</span>
                 </div>
               ) : (

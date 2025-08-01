@@ -13,23 +13,55 @@ const Metrics = () => {
     processingTime: 0,
     detectionRate: 0,
   });
+  const [periodMetrics, setPeriodMetrics] = useState({
+    totalScans: 0,
+    accuracy: 0,
+    processingTime: 0,
+    detectionRate: 0,
+    change: {
+      totalScans: "+0%",
+      accuracy: "+0%",
+      processingTime: "+0s",
+      detectionRate: "+0%",
+    }
+  });
 
   const {
     metrics,
     getRecentPredictions,
     getDiseaseMetrics,
     getFormattedTimestamp,
+    getMetricsByPeriod, // Assuming this function exists in your PredictionContext
   } = usePredictions();
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // Animate numbers on component mount and when metrics change
+  // Fetch metrics when period changes
+  useEffect(() => {
+    const fetchPeriodMetrics = async () => {
+      const newMetrics = await getMetricsByPeriod(selectedPeriod);
+      setPeriodMetrics(newMetrics);
+      
+      // Update animated values target
+      setAnimatedValues(prev => ({
+        ...prev,
+        totalScans: 0, // Reset to 0 to trigger animation
+        accuracy: 0,
+        processingTime: 0,
+        detectionRate: 0,
+      }));
+    };
+
+    fetchPeriodMetrics();
+  }, [selectedPeriod, getMetricsByPeriod]);
+
+  // Animate numbers when periodMetrics change
   useEffect(() => {
     const targets = {
-      totalScans: metrics.totalScans,
-      accuracy: metrics.accuracy,
-      processingTime: metrics.processingTime,
-      detectionRate: metrics.detectionRate,
+      totalScans: periodMetrics.totalScans,
+      accuracy: periodMetrics.accuracy,
+      processingTime: periodMetrics.processingTime,
+      detectionRate: periodMetrics.detectionRate,
     };
 
     const duration = 2000; // 2 seconds
@@ -55,14 +87,14 @@ const Metrics = () => {
     }, stepDuration);
 
     return () => clearInterval(interval);
-  }, [metrics]);
+  }, [periodMetrics]);
 
   const metricsCards = [
     {
       title: "Total Scans Processed",
       value: animatedValues.totalScans.toLocaleString(),
-      change: "+12.5%",
-      changeType: "positive",
+      change: periodMetrics.change.totalScans,
+      changeType: periodMetrics.change.totalScans.startsWith("+") ? "positive" : "negative",
       icon: (
         <svg
           className="w-8 h-8"
@@ -83,8 +115,8 @@ const Metrics = () => {
     {
       title: "Model Accuracy",
       value: `${animatedValues.accuracy}%`,
-      change: "+2.1%",
-      changeType: "positive",
+      change: periodMetrics.change.accuracy,
+      changeType: periodMetrics.change.accuracy.startsWith("+") ? "positive" : "negative",
       icon: (
         <svg
           className="w-8 h-8"
@@ -105,8 +137,8 @@ const Metrics = () => {
     {
       title: "Avg Processing Time",
       value: `${animatedValues.processingTime}s`,
-      change: "-0.3s",
-      changeType: "positive",
+      change: periodMetrics.change.processingTime,
+      changeType: periodMetrics.change.processingTime.startsWith("-") ? "positive" : "negative",
       icon: (
         <svg
           className="w-8 h-8"
@@ -126,9 +158,9 @@ const Metrics = () => {
     },
     {
       title: "Disease Detection Rate",
-      value: `${94}%`,
-      change: "+5.7%",
-      changeType: "positive",
+      value: `${animatedValues.detectionRate}%`,
+      change: periodMetrics.change.detectionRate,
+      changeType: periodMetrics.change.detectionRate.startsWith("+") ? "positive" : "negative",
       icon: (
         <svg
           className="w-8 h-8"
