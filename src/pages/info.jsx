@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ChatbotWidget from "../components/ChatbotWidget";
+import AlzheimerVideo from "../assets/Alzheimer.mp4";
+import ParkinsonVideo from "../assets/Parkinson.mp4";
 
 const Info = () => {
   const [activeTab, setActiveTab] = useState("alzheimer");
@@ -256,9 +258,58 @@ const Info = () => {
           <h2 className="text-2xl font-bold text-gray-900 mb-4">
             {currentInfo.title}
           </h2>
-          <p className="text-gray-600 text-lg leading-relaxed">
+          <p className="text-gray-600 text-lg leading-relaxed mb-6">
             {currentInfo.description}
           </p>
+          
+          {/* Video Section */}
+          <div className="mt-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+              Educational Video
+            </h3>
+            <div className="flex justify-center">
+              <div className="relative rounded-lg overflow-hidden shadow-md bg-gray-100 w-3/4 max-w-2xl">
+                <video
+                  key={activeTab}
+                  controls
+                  preload="metadata"
+                  className="w-full h-80 bg-black"
+                  style={{ objectFit: 'contain' }}
+                  onLoadedMetadata={(e) => {
+                    console.log(`${activeTab} video loaded:`, {
+                      duration: e.target.duration,
+                      width: e.target.videoWidth,
+                      height: e.target.videoHeight
+                    });
+                  }}
+                  onError={(e) => {
+                    console.error(`${activeTab} video error:`, e);
+                  }}
+                >
+                  <source 
+                    src={activeTab === "alzheimer" ? AlzheimerVideo : ParkinsonVideo} 
+                    type="video/mp4" 
+                  />
+                  <p className="text-center text-gray-500 p-4">
+                    Your browser does not support the video tag.
+                    <br />
+                    <a 
+                      href={activeTab === "alzheimer" ? AlzheimerVideo : ParkinsonVideo}
+                      download
+                      className="text-blue-600 hover:underline"
+                    >
+                      Download {activeTab === "alzheimer" ? "Alzheimer" : "Parkinson"} video
+                    </a>
+                  </p>
+                </video>
+                
+                {/* Video info */}
+                <div className="mt-2 text-sm text-gray-600 text-center">
+                  Currently showing: {activeTab === "alzheimer" ? "Alzheimer's Disease" : "Parkinson's Disease"} educational video
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8">
