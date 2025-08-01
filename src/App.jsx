@@ -13,7 +13,7 @@ import Login from "./pages/login";
 import Signup from "./pages/signup";
 import Dashboard from "./pages/dashboard";
 import Info from "./pages/info";
-import Metrics from "./pages/Metrics";
+import Metrics from "./pages/metrics";
 import ModelTest from "./pages/ModelTest";
 import AllAnalyses from "./pages/AllAnalyses";
 

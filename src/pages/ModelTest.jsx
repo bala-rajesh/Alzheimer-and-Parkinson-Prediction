@@ -122,7 +122,10 @@ const ModelTest = () => {
             parkinson: prediction.confidence.parkinson
           },
           primary_confidence: prediction.primary_confidence,
-          metadata: response.metadata,
+          metadata: {
+            ...response.metadata,
+            timestamp: new Date().toISOString() // Use current client time for accurate timestamp
+          },
           disclaimer: response.disclaimer,
           image_url: response.image_url // Store Cloudinary URL
         };
@@ -230,7 +233,7 @@ const ModelTest = () => {
   return (
     <>
       <ChatbotWidget />
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
       {/* Notification Toast */}
       {notification && (
         <div className={`fixed top-4 right-4 z-50 max-w-md p-4 rounded-lg shadow-lg transform transition-all duration-300 ${
@@ -278,64 +281,64 @@ const ModelTest = () => {
       )}
 
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">AI Model Testing</h1>
-        <p className="text-lg text-gray-600">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2 sm:mb-4">AI Model Testing</h1>
+        <p className="text-base sm:text-lg text-gray-600">
           Upload MRI brain scans to test our AI models for Alzheimer's and Parkinson's disease detection.
         </p>
       </div>
 
       {/* Unified Analysis Info */}
-      <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Comprehensive Neurological Analysis</h2>
-        <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
-          <div className="flex items-center space-x-4 mb-4">
-            <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl flex items-center justify-center shadow-lg">
-              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 mb-6 sm:mb-8">
+        <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-4">Comprehensive Neurological Analysis</h2>
+        <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-indigo-50 rounded-xl p-4 sm:p-6 border border-blue-200">
+          <div className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 mb-4">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl flex items-center justify-center shadow-lg mx-auto sm:mx-0">
+              <svg className="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
               </svg>
             </div>
-            <div>
-              <h3 className="text-2xl font-bold text-gray-900">Dual Disease Detection</h3>
-              <p className="text-gray-600 text-lg">Simultaneous analysis for both Alzheimer's and Parkinson's disease</p>
+            <div className="text-center sm:text-left">
+              <h3 className="text-xl sm:text-2xl font-bold text-gray-900">Dual Disease Detection</h3>
+              <p className="text-gray-600 text-sm sm:text-lg">Simultaneous analysis for both Alzheimer's and Parkinson's disease</p>
             </div>
           </div>
           
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="bg-white/70 rounded-lg p-4 border border-blue-200/50">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+            <div className="bg-white/70 rounded-lg p-3 sm:p-4 border border-blue-200/50">
               <div className="flex items-center space-x-3 mb-2">
-                <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                   </svg>
                 </div>
-                <h4 className="font-semibold text-gray-900">Alzheimer's Detection</h4>
+                <h4 className="font-semibold text-gray-900 text-sm sm:text-base">Alzheimer's Detection</h4>
               </div>
-              <p className="text-sm text-gray-600">Analyzes hippocampal atrophy, cortical thinning, and structural brain changes</p>
+              <p className="text-xs sm:text-sm text-gray-600">Analyzes hippocampal atrophy, cortical thinning, and structural brain changes</p>
             </div>
             
-            <div className="bg-white/70 rounded-lg p-4 border border-purple-200/50">
+            <div className="bg-white/70 rounded-lg p-3 sm:p-4 border border-purple-200/50">
               <div className="flex items-center space-x-3 mb-2">
-                <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-purple-500 rounded-lg flex items-center justify-center">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
                 </div>
-                <h4 className="font-semibold text-gray-900">Parkinson's Detection</h4>
+                <h4 className="font-semibold text-gray-900 text-sm sm:text-base">Parkinson's Detection</h4>
               </div>
-              <p className="text-sm text-gray-600">Examines substantia nigra changes, dopaminergic pathways, and motor cortex</p>
+              <p className="text-xs sm:text-sm text-gray-600">Examines substantia nigra changes, dopaminergic pathways, and motor cortex</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* File Upload */}
-      <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Upload MRI Scan</h2>
+      <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 mb-6 sm:mb-8">
+        <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-4">Upload MRI Scan</h2>
         
         {!selectedFile ? (
           <div
-            className={`border-2 border-dashed rounded-xl p-12 text-center transition-all duration-200 ${
+            className={`border-2 border-dashed rounded-xl p-6 sm:p-12 text-center transition-all duration-200 ${
               dragActive
                 ? 'border-blue-500 bg-blue-50'
                 : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
@@ -345,25 +348,25 @@ const ModelTest = () => {
             onDragOver={handleDrag}
             onDrop={handleDrop}
           >
-            <div className="flex flex-col items-center space-y-4">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
-                <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="flex flex-col items-center space-y-3 sm:space-y-4">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 rounded-full flex items-center justify-center">
+                <svg className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                 </svg>
               </div>
               <div>
-                <p className="text-lg font-medium text-gray-900 mb-2">
+                <p className="text-base sm:text-lg font-medium text-gray-900 mb-2">
                   Drag and drop your MRI scan here
                 </p>
-                <p className="text-gray-600 mb-4">or</p>
+                <p className="text-gray-600 mb-3 sm:mb-4">or</p>
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-200 text-sm sm:text-base"
                 >
                   Choose File
                 </button>
               </div>
-              <p className="text-sm text-gray-500">
+              <p className="text-xs sm:text-sm text-gray-500">
                 Supports: JPEG, PNG, DICOM files (Max 10MB)
               </p>
             </div>
@@ -377,26 +380,26 @@ const ModelTest = () => {
             />
           </div>
         ) : (
-          <div className="border border-gray-200 rounded-xl p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                  <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="border border-gray-200 rounded-xl p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 space-y-3 sm:space-y-0">
+              <div className="flex items-center space-x-3 sm:space-x-4">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                  <svg className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
                 <div>
-                  <p className="font-medium text-gray-900">{selectedFile.name}</p>
-                  <p className="text-sm text-gray-600">
+                  <p className="font-medium text-gray-900 text-sm sm:text-base truncate max-w-xs sm:max-w-none">{selectedFile.name}</p>
+                  <p className="text-xs sm:text-sm text-gray-600">
                     {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
                   </p>
                 </div>
               </div>
               <button
                 onClick={resetAnalysis}
-                className="text-gray-400 hover:text-red-600 transition-colors duration-200"
+                className="text-gray-400 hover:text-red-600 transition-colors duration-200 self-end sm:self-auto"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
@@ -407,18 +410,18 @@ const ModelTest = () => {
               <img
                 src={URL.createObjectURL(selectedFile)}
                 alt="MRI Preview"
-                className="w-full max-h-96 object-contain rounded-lg bg-gray-100 border border-gray-200"
+                className="w-full max-h-64 sm:max-h-96 object-contain rounded-lg bg-gray-100 border border-gray-200"
               />
             </div>
             
             <button
               onClick={handleAnalyze}
               disabled={isAnalyzing}
-              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-6 rounded-lg font-semibold hover:shadow-lg transform hover:scale-[1.02] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-2 sm:py-3 px-4 sm:px-6 rounded-lg font-semibold hover:shadow-lg transform hover:scale-[1.02] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-sm sm:text-base"
             >
               {isAnalyzing ? (
                 <div className="flex items-center justify-center space-x-2">
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   <span>Analyzing...</span>
                 </div>
               ) : (
@@ -431,23 +434,23 @@ const ModelTest = () => {
 
       {/* Results */}
       {results && (
-        <div className="bg-white rounded-2xl shadow-lg p-6 animate-fadeIn">
-          <h2 className="text-xl font-bold text-gray-900 mb-6">AI Analysis Results</h2>
+        <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 animate-fadeIn">
+          <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-6">AI Analysis Results</h2>
           
           {/* Primary Result */}
-          <div className={`rounded-xl p-6 mb-6 border-2 ${
+          <div className={`rounded-xl p-4 sm:p-6 mb-4 sm:mb-6 border-2 ${
             results.prediction === 'CONTROL' 
               ? 'bg-green-50 border-green-200' 
               : 'bg-orange-50 border-orange-200'
           }`}>
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">{results.full_name}</h3>
-                <p className="text-gray-600 text-lg">{results.description}</p>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 space-y-3 sm:space-y-0">
+              <div className="text-center sm:text-left">
+                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">{results.full_name}</h3>
+                <p className="text-gray-600 text-sm sm:text-lg">{results.description}</p>
               </div>
-              <div className="text-right">
-                <p className="text-sm text-gray-600 mb-1">Confidence</p>
-                <p className="text-3xl font-bold text-gray-900">{results.primary_confidence.toFixed(1)}%</p>
+              <div className="text-center sm:text-right">
+                <p className="text-xs sm:text-sm text-gray-600 mb-1">Confidence</p>
+                <p className="text-2xl sm:text-3xl font-bold text-gray-900">{results.primary_confidence.toFixed(1)}%</p>
               </div>
             </div>
             
@@ -465,18 +468,18 @@ const ModelTest = () => {
 
           {/* Disease Specific Information */}
           {results.prediction !== 'CONTROL' && diseaseInfo[results.prediction] && (
-            <div className="bg-white rounded-xl p-6 mb-6 border border-gray-200">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Important Health Guidelines</h3>
+            <div className="bg-white rounded-xl p-4 sm:p-6 mb-4 sm:mb-6 border border-gray-200">
+              <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-4">Important Health Guidelines</h3>
               
               {/* Precautions */}
-              <div className="mb-6">
-                <h4 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
-                  <svg className="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="mb-4 sm:mb-6">
+                <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 flex items-center">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
                   </svg>
                   Precautions
                 </h4>
-                <ul className="list-disc list-inside space-y-2 text-gray-700">
+                <ul className="list-disc list-inside space-y-2 text-gray-700 text-sm sm:text-base">
                   {diseaseInfo[results.prediction].precautions.map((precaution, index) => (
                     <li key={index} className="ml-4">{precaution}</li>
                   ))}
@@ -485,13 +488,13 @@ const ModelTest = () => {
               
               {/* Additional Recommendations */}
               <div>
-                <h4 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
-                  <svg className="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 flex items-center">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   Lifestyle Recommendations
                 </h4>
-                <ul className="list-disc list-inside space-y-2 text-gray-700">
+                <ul className="list-disc list-inside space-y-2 text-gray-700 text-sm sm:text-base">
                   {diseaseInfo[results.prediction].recommendations.map((recommendation, index) => (
                     <li key={index} className="ml-4">{recommendation}</li>
                   ))}
@@ -501,18 +504,18 @@ const ModelTest = () => {
           )}
 
           {/* Detailed Confidence Scores */}
-          <div className="bg-gray-50 rounded-xl p-6 mb-6">
-            <h4 className="text-lg font-semibold text-gray-900 mb-4">Detailed Confidence Scores</h4>
-            <div className="space-y-4">
+          <div className="bg-gray-50 rounded-xl p-4 sm:p-6 mb-4 sm:mb-6">
+            <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-4">Detailed Confidence Scores</h4>
+            <div className="space-y-3 sm:space-y-4">
               {/* Control */}
               <div>
-                <div className="flex justify-between text-sm mb-2">
+                <div className="flex justify-between text-xs sm:text-sm mb-2">
                   <span className="text-gray-700 font-medium">Normal/Control</span>
                   <span className="font-semibold text-green-600">{results.confidence.control.toFixed(1)}%</span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-3">
+                <div className="w-full bg-gray-200 rounded-full h-2 sm:h-3">
                   <div 
-                    className="h-3 bg-green-500 rounded-full transition-all duration-500" 
+                    className="h-2 sm:h-3 bg-green-500 rounded-full transition-all duration-500" 
                     style={{ width: `${results.confidence.control}%` }} 
                   />
                 </div>
@@ -520,13 +523,13 @@ const ModelTest = () => {
               
               {/* Alzheimer's */}
               <div>
-                <div className="flex justify-between text-sm mb-2">
+                <div className="flex justify-between text-xs sm:text-sm mb-2">
                   <span className="text-gray-700 font-medium">Alzheimer's Disease</span>
                   <span className="font-semibold text-red-600">{results.confidence.alzheimer.toFixed(1)}%</span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-3">
+                <div className="w-full bg-gray-200 rounded-full h-2 sm:h-3">
                   <div 
-                    className="h-3 bg-red-500 rounded-full transition-all duration-500" 
+                    className="h-2 sm:h-3 bg-red-500 rounded-full transition-all duration-500" 
                     style={{ width: `${results.confidence.alzheimer}%` }} 
                   />
                 </div>
@@ -534,13 +537,13 @@ const ModelTest = () => {
               
               {/* Parkinson's */}
               <div>
-                <div className="flex justify-between text-sm mb-2">
+                <div className="flex justify-between text-xs sm:text-sm mb-2">
                   <span className="text-gray-700 font-medium">Parkinson's Disease</span>
                   <span className="font-semibold text-orange-600">{results.confidence.parkinson.toFixed(1)}%</span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-3">
+                <div className="w-full bg-gray-200 rounded-full h-2 sm:h-3">
                   <div 
-                    className="h-3 bg-orange-500 rounded-full transition-all duration-500" 
+                    className="h-2 sm:h-3 bg-orange-500 rounded-full transition-all duration-500" 
                     style={{ width: `${results.confidence.parkinson}%` }} 
                   />
                 </div>
@@ -550,24 +553,26 @@ const ModelTest = () => {
 
           {/* Analysis Metadata */}
           {results.metadata && (
-            <div className="bg-blue-50 rounded-xl p-6 mb-6 border border-blue-200">
-              <h4 className="text-lg font-semibold text-gray-900 mb-3">Analysis Details</h4>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="text-gray-600">Analyzed:</span>
-                  <span className="ml-2 font-medium">{new Date(results.metadata.timestamp).toLocaleString()}</span>
+            <div className="bg-blue-50 rounded-xl p-4 sm:p-6 mb-4 sm:mb-6 border border-blue-200">
+              <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-3">Analysis Details</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-xs sm:text-sm">
+                <div className="flex flex-col sm:flex-row">
+                  <span className="text-gray-600 font-medium sm:font-normal">Analyzed:</span>
+                  <span className="sm:ml-2 font-medium break-all">
+                    {new Date(results.metadata.timestamp).toLocaleDateString()} {new Date(results.metadata.timestamp).toLocaleTimeString()}
+                  </span>
                 </div>
-                <div>
-                  <span className="text-gray-600">File:</span>
-                  <span className="ml-2 font-medium">{results.metadata.filename}</span>
+                <div className="flex flex-col sm:flex-row">
+                  <span className="text-gray-600 font-medium sm:font-normal">File:</span>
+                  <span className="sm:ml-2 font-medium truncate" title={results.metadata.filename}>{results.metadata.filename}</span>
                 </div>
-                <div>
-                  <span className="text-gray-600">Model Version:</span>
-                  <span className="ml-2 font-medium">{results.metadata.model_version}</span>
+                <div className="flex flex-col sm:flex-row">
+                  <span className="text-gray-600 font-medium sm:font-normal">Model Version:</span>
+                  <span className="sm:ml-2 font-medium">{results.metadata.model_version}</span>
                 </div>
-                <div>
-                  <span className="text-gray-600">User ID:</span>
-                  <span className="ml-2 font-medium">{results.metadata.user_id}</span>
+                <div className="flex flex-col sm:flex-row">
+                  <span className="text-gray-600 font-medium sm:font-normal">User ID:</span>
+                  <span className="sm:ml-2 font-medium">{results.metadata.user_id}</span>
                 </div>
               </div>
             </div>
@@ -575,33 +580,33 @@ const ModelTest = () => {
 
           {/* Disclaimer */}
           {results.disclaimer && (
-            <div className="bg-yellow-50 rounded-xl p-6 mb-6 border border-yellow-200">
-              <h4 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
-                <svg className="w-5 h-5 text-yellow-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="bg-yellow-50 rounded-xl p-4 sm:p-6 mb-4 sm:mb-6 border border-yellow-200">
+              <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 flex items-center">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
                 </svg>
                 Important Disclaimer
               </h4>
-              <p className="text-sm text-gray-700">{results.disclaimer}</p>
+              <p className="text-xs sm:text-sm text-gray-700">{results.disclaimer}</p>
             </div>
           )}
 
           {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
             <button
               onClick={resetAnalysis}
-              className="flex-1 bg-gray-100 text-gray-700 py-3 px-6 rounded-lg font-semibold hover:bg-gray-200 transition-colors duration-200"
+              className="flex-1 bg-gray-100 text-gray-700 py-2 sm:py-3 px-4 sm:px-6 rounded-lg font-semibold hover:bg-gray-200 transition-colors duration-200 text-sm sm:text-base"
             >
               Analyze Another Scan
             </button>
             <button 
               onClick={handleDownloadReport}
               disabled={isGeneratingReport}
-              className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-6 rounded-lg font-semibold hover:shadow-lg transform hover:scale-[1.02] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 text-white py-2 sm:py-3 px-4 sm:px-6 rounded-lg font-semibold hover:shadow-lg transform hover:scale-[1.02] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-sm sm:text-base"
             >
               {isGeneratingReport ? (
                 <div className="flex items-center justify-center space-x-2">
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   <span>Generating Report...</span>
                 </div>
               ) : (
