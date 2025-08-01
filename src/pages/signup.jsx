@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import axios from 'axios';
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -16,6 +17,9 @@ const Signup = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isVerifyingEmail, setIsVerifyingEmail] = useState(false);
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
+  const [emailError, setEmailError] = useState('');
 
   const { register } = useAuth();
   const navigate = useNavigate();
@@ -28,6 +32,118 @@ const Signup = () => {
     });
     // Clear error when user starts typing
     if (error) setError('');
+    // Reset email verification when email changes
+    if (name === 'email') {
+      setIsEmailVerified(false);
+      setEmailError('');
+    }
+  };
+
+  const checkCommonDomainTypos = (email) => {
+    const commonTypos = {
+      'gmil.com': 'gmail.com',
+      'gmai.com': 'gmail.com',
+      'gmail.co': 'gmail.com',
+      'yahooo.com': 'yahoo.com',
+      'yaho.com': 'yahoo.com',
+      'yahoo.co': 'yahoo.com',
+      'hotmial.com': 'hotmail.com',
+      'hotmai.com': 'hotmail.com',
+      'hotmail.co': 'hotmail.com',
+      'outlok.com': 'outlook.com',
+      'outlook.co': 'outlook.com',
+      'icloud.co': 'icloud.com'
+    };
+
+    const domain = email.split('@')[1];
+    if (domain && commonTypos[domain]) {
+      return commonTypos[domain];
+    }
+    return null;
+  };
+
+  const verifyEmail = async () => {
+    if (!formData.email) {
+      setEmailError("Please enter an email address first");
+      return;
+    }
+
+    // Basic email format validation first
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setEmailError("Please enter a valid email format");
+      return;
+    }
+
+    // Check for common domain typos
+    const suggestedDomain = checkCommonDomainTypos(formData.email);
+    if (suggestedDomain) {
+      const suggestedEmail = formData.email.split('@')[0] + '@' + suggestedDomain;
+      setEmailError(`Did you mean "${suggestedEmail}"? Please check your email domain.`);
+      setIsEmailVerified(false);
+      return;
+    }
+
+    setIsVerifyingEmail(true);
+    setEmailError("");
+
+    const options = {
+      method: 'GET',
+      url: 'https://validect-email-verification-v1.p.rapidapi.com/v1/verify',
+      params: {
+        email: formData.email
+      },
+      headers: {
+        'x-rapidapi-key': 'f84d6701fcmshdbebcbe929333f4p157408jsn684aad0a8a07',
+        'x-rapidapi-host': 'validect-email-verification-v1.p.rapidapi.com'
+      }
+    };
+
+    try {
+      const response = await axios.request(options);
+      console.log(response.data);
+
+      // More strict validation - only accept clearly valid responses
+      if (response.data && response.data.valid === true) {
+        setIsEmailVerified(true);
+        setEmailError("");
+      } else if (response.data && response.data.valid === false) {
+        setEmailError("Email address is not valid. Please check and try again.");
+        setIsEmailVerified(false);
+      } else if (response.data && response.data.status === "valid") {
+        setIsEmailVerified(true);
+        setEmailError("");
+      } else if (response.data && response.data.status === "invalid") {
+        setEmailError("Email address is not valid. Please check and try again.");
+        setIsEmailVerified(false);
+      } else {
+        // If response is unclear, treat as invalid
+        setEmailError("Unable to verify email. Please check the format and try again.");
+        setIsEmailVerified(false);
+      }
+    } catch (error) {
+      console.error("Email verification error:", error);
+      if (error.response) {
+        // API responded with error status
+        console.log("Error response:", error.response.data);
+        if (error.response.status === 429) {
+          setEmailError("Too many requests. Please wait a moment and try again.");
+        } else if (error.response.status === 401) {
+          setEmailError("API authentication failed. Please try again later.");
+        } else {
+          setEmailError("Email verification service is temporarily unavailable.");
+        }
+      } else if (error.request) {
+        // Network error
+        setEmailError("Network error. Please check your connection and try again.");
+      } else {
+        // No fallback - require proper verification
+        setEmailError("Email verification failed. Please check your email address.");
+      }
+      setIsEmailVerified(false);
+    } finally {
+      setIsVerifyingEmail(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -143,23 +259,74 @@ const Signup = () => {
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
                 Email address
               </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
-                  </svg>
+              <div className="flex space-x-2">
+                <div className="relative flex-1">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+                    </svg>
+                  </div>
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    required
+                    value={formData.email}
+                    onChange={handleChange}
+                    className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400 ${
+                      isEmailVerified 
+                        ? 'border-green-300 bg-green-50' 
+                        : emailError 
+                        ? 'border-red-300 bg-red-50' 
+                        : 'border-gray-300'
+                    }`}
+                    placeholder="Enter your email"
+                  />
+                  {isEmailVerified && (
+                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                      <svg className="h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                  )}
                 </div>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  required
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-400"
-                  placeholder="john@hospital.com"
-                />
+                <button
+                  type="button"
+                  onClick={verifyEmail}
+                  disabled={isVerifyingEmail || !formData.email || isEmailVerified}
+                  className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                >
+                  {isVerifyingEmail ? (
+                    <div className="flex items-center">
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Verifying...
+                    </div>
+                  ) : isEmailVerified ? (
+                    'Verified'
+                  ) : (
+                    'Verify'
+                  )}
+                </button>
               </div>
+              {emailError && (
+                <p className="mt-2 text-sm text-red-600 flex items-center">
+                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  {emailError}
+                </p>
+              )}
+              {isEmailVerified && (
+                <p className="mt-2 text-sm text-green-600 flex items-center">
+                  <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Email verified successfully!
+                </p>
+              )}
             </div>
 
             {/* User Type */}

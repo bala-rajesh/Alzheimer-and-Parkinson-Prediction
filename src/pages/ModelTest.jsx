@@ -201,12 +201,8 @@ const ModelTest = () => {
           
           console.log('Report download initiated successfully');
           
-          // Show success message with Cloudinary info
-          if (response.cloudinaryUrl) {
-            showNotification(`✅ Report downloaded successfully!\n\n📁 Local download: Complete\n☁️ Cloud backup: Saved to Cloudinary\n🔗 Cloud URL: ${response.cloudinaryUrl}`, 'success', 8000);
-          } else {
-            showNotification('✅ Report downloaded successfully!\n\n📁 Local download: Complete\n⚠️ Cloud backup: Failed (but local download succeeded)', 'success', 6000);
-          }
+          // Show simple success message
+          showNotification('Report downloaded successfully!', 'success');
         } catch (downloadError) {
           console.error('Download error:', downloadError);
           showNotification('Failed to download the report. Please try again.', 'error');
