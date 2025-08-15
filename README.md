@@ -48,7 +48,7 @@ This project is a comprehensive web application designed to assist in the predic
 
 1.  Clone the repository:
     ```bash
-    git clone <repository_url>
+    git clone <https://github.com/bala-rajesh/Alzheimer-and-Parkinson-Prediction>
     cd <project_directory>
     ```
 
@@ -104,7 +104,18 @@ This project is a comprehensive web application designed to assist in the predic
 
 
 
+
+
+
+
+
 <img width="1919" height="855" alt="Image" src="https://github.com/user-attachments/assets/8b4342c2-a075-4f01-8cb2-c248a29486ef" />
+
+
+
+
+
+
 
 
 
@@ -131,4 +142,4 @@ If you have any questions or suggestions, please feel free to contact us at [kun
 
 Thank you for checking out this project! We hope it's helpful and we appreciate any feedback you may have.
 
-This is written by [readme.ai](https://readme-generator-phi.vercel.app/).
+
